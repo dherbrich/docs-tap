@@ -2,10 +2,8 @@
 
 Tanzu Application Platform 1.1 includes:
 
-- Documentation for [integrating with your existing identity management solution](integrating-identity.md).
-- Five new default roles to help you set up permissions for users and service accounts within a namespace on a cluster that runs one of the Tanzu Application Platform profiles.
-- TAP `rbac` [CLI plug-in](binding.md) for role binding.
-- Documentation for [Logging in using Pinniped](pinniped-login.md).
+- Five new default roles to help you set up permissions for users and [service accounts](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/) within a namespace on a cluster that runs one of the Tanzu Application Platform profiles.
+- Tanzu CLI [RBAC plug-in](binding.md) **BETA** for role binding.
 
 ## Default roles
 
