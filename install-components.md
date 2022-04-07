@@ -17,7 +17,7 @@ For more information, see [Prerequisites](prerequisites.md).
 - [Install cert-manager, Contour, and FluxCD](cert-mgr-contour-fcd/install-cert-mgr.md)
 - [Install Cloud Native Runtimes](cloud-native-runtimes/install-cnrt.md)
 - [Install Convention Service](convention-service/install-conv-service.md)
-- [Install default roles for Tanzu Application Platform](./authn-authz/overview.md)  
+- [Install default roles for Tanzu Application Platform](authn-authz/install.md)  
 - [Install Developer Conventions](developer-conventions/install-dev-conventions.md)
 - [Install Learning Center for Tanzu Application Platform](learning-center/install-learning-center.md)
 - [Install Out-of-the-Box Templates](scc/install-ootb-templates.md)
@@ -70,7 +70,7 @@ Use the following procedure to verify that the packages are installed.
     source-controller        controller.source.apps.tanzu.vmware.com            0.2.0            Reconcile succeeded
     tap-gui                  tap-gui.tanzu.vmware.com                           0.3.0-rc.4       Reconcile succeeded
     tekton-pipelines         tekton.tanzu.vmware.com                            0.30.0           Reconcile succeeded
-    tbs                      buildservice.tanzu.vmware.com                      1.4.2            Reconcile succeeded
+    tbs                      buildservice.tanzu.vmware.com                      1.5.0            Reconcile succeeded
     ```
 
 ## <a id='setup'></a> Set up developer namespaces to use installed packages
@@ -108,9 +108,7 @@ that you plan to create the `Workload` in:
     kubectl create secret docker-registry registry-credentials --docker-server=REGISTRY-SERVER --docker-username=REGISTRY-USERNAME --docker-password=REGISTRY-PASSWORD -n YOUR-NAMESPACE
     ```
 
-2. Add secrets, a service account, and RBAC rules to the developer namespace by running:
-
-    >**Important:** Ensure to replace `YOUR-NAMESPACE` with the name of the developer namespace.
+2. Add secrets, a service account to execute the supply chain, and RBAC rules to authorize the service account to the developer namespace by running:
 
     ```
     cat <<EOF | kubectl -n YOUR-NAMESPACE apply -f -
@@ -135,63 +133,65 @@ that you plan to create the `Workload` in:
       - name: tap-registry
     ---
     apiVersion: rbac.authorization.k8s.io/v1
-    kind: Role
+    kind: RoleBinding
     metadata:
-      name: default
-    rules:
-    - apiGroups: [source.toolkit.fluxcd.io]
-      resources: [gitrepositories]
-      verbs: ['*']
-    - apiGroups: [source.apps.tanzu.vmware.com]
-      resources: [imagerepositories]
-      verbs: ['*']
-    - apiGroups: [carto.run]
-      resources: [deliverables, runnables]
-      verbs: ['*']
-    - apiGroups: [kpack.io]
-      resources: [images]
-      verbs: ['*']
-    - apiGroups: [conventions.apps.tanzu.vmware.com]
-      resources: [podintents]
-      verbs: ['*']
-    - apiGroups: [""]
-      resources: ['configmaps']
-      verbs: ['*']
-    - apiGroups: [""]
-      resources: ['pods']
-      verbs: ['list']
-    - apiGroups: [tekton.dev]
-      resources: [taskruns, pipelineruns]
-      verbs: ['*']
-    - apiGroups: [tekton.dev]
-      resources: [pipelines]
-      verbs: ['list']
-    - apiGroups: [kappctrl.k14s.io]
-      resources: [apps]
-      verbs: ['*']
-    - apiGroups: [serving.knative.dev]
-      resources: ['services']
-      verbs: ['*']
-    - apiGroups: [servicebinding.io]
-      resources: ['servicebindings']
-      verbs: ['*']
-    - apiGroups: [services.apps.tanzu.vmware.com]
-      resources: ['resourceclaims']
-      verbs: ['*']
-    - apiGroups: [scanning.apps.tanzu.vmware.com]
-      resources: ['imagescans', 'sourcescans']
-      verbs: ['*']
+      name: default-permit-deliverable
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: deliverable
+    subjects:
+      - kind: ServiceAccount
+        name: default
     ---
     apiVersion: rbac.authorization.k8s.io/v1
     kind: RoleBinding
     metadata:
-      name: default
+      name: default-permit-workload
     roleRef:
       apiGroup: rbac.authorization.k8s.io
-      kind: Role
-      name: default
+      kind: ClusterRole
+      name: workload
     subjects:
       - kind: ServiceAccount
         name: default
     EOF
     ```
+
+3. Give developers namespace-level access and view access to appropriate cluster-level resources by doing one of the following:
+  * Use the `tanzu auth` plug-in to grant `app-viewer` or `app-editor` roles
+  * Apply the following RBAC policy:
+
+      ```
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: dev-permit-app-viewer
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: app-viewer
+      subjects:
+        - kind: Group
+          name: "namespace-developers"
+          apiGroup: rbac.authorization.k8s.io
+      --
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: namespace-dev-permit-app-viewer
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: app-viewer-cluster-access
+      subjects:
+        - kind: Group
+          name: "namespace-developers"
+          apiGroup: rbac.authorization.k8s.io
+      EOF
+      ```
+
+      VMware recommends using your identity provider's groups system to grant access to a group of
+      developers, rather than granting roles directly to individuals.
+      For more information, see the
+      [Kubernetes documentation](https://kubernetes.io/docs/reference/access-authn-authz/rbac/#referring-to-subjects).

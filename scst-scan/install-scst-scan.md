@@ -7,7 +7,7 @@ from the Tanzu Application Platform package repository.
 The full profile includes Supply Chain Security Tools - Scan.
 For more information about profiles, see [Installing the Tanzu Application Platform Package and Profiles](../install.md).
 
-## <a id='scst-scan-prereqs'></a>Prerequisites
+## <a id='scst-scan-prereqs'></a> Prerequisites
 
 Before installing Supply Chain Security Tools - Scan:
 
@@ -16,10 +16,10 @@ Before installing Supply Chain Security Tools - Scan:
 
     For usage instructions, see [Using the Supply Chain Security Tools - Store](../scst-store/overview.md).
 
-- Install Supply Chain Security Tools - Store Tanzu CLI plug-in to query the Supply Chain Security Tools - Store for CVE results.
-  See [Installing the Tanzu CLI plug-in](../scst-store/cli-installation.md).
+- Install the Tanzu Insight CLI plug-in to query the Supply Chain Security Tools - Store for CVE results.
+  See [Install the Tanzu Insight CLI plug-in](../cli-plugins/insight/cli-installation.md).
 
-## <a id="scanner-support"></a>Scanner support
+## <a id="scanner-support"></a> Scanner support
 
 | Out-Of-The-Box Scanner | Version |
 | --- | --- |
@@ -75,7 +75,7 @@ To install Supply Chain Security Tools - Scan (Scan controller):
     Where `VERSION` is your package version number. For example, `1.1.0`.
 
 1. (Optional) Configure Supply Chain Security Tools - Store in a different cluster
-   
+
    ```yaml
    ---
    metadataStore:
@@ -88,7 +88,7 @@ To install Supply Chain Security Tools - Scan (Scan controller):
 
    - `metadataStore.url` is the URL pointing to the Supply Chain Security Tools - Store ingress in the cluster that has your Supply Chain Security Tools - Store deployment.
 
-   - `metadataStore.authSecret.name` is the name of the secret that has the auth token to post to the Supply Chain Security Tools - Store. 
+   - `metadataStore.authSecret.name` is the name of the secret that has the auth token to post to the Supply Chain Security Tools - Store.
 
 To install Supply Chain Security Tools - Scan (Grype scanner):
 

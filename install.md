@@ -220,10 +220,12 @@ Where:
     * Google Cloud Registry has the form `kp_default_repository: "gcr.io/my-project/build-service"`
 - `KP-DEFAULT-REPO-USERNAME` is the username that can write to `KP-DEFAULT-REPO`. You should be able to `docker push` to this location with this credential.
     * For Google Cloud Registry, use `kp_default_repository_username: _json_key`
-- `KP-DEFAULT-REPO-PASSWORD` is the password for the user that can write to `KP-DEFAULT-REPO`. You can `docker push` to this location with this credential.
-    * For Google Cloud Registry, use the contents of the service account JSON key.
-- `DESCRIPTOR-NAME` is the name of the descriptor to import automatically. Current available options at time of release:
-    * `full` contains all dependencies, and is for production use.
+- `KP-DEFAULT-REPO-PASSWORD` is the password for the user that can write to `KP-DEFAULT-REPO`. You can `docker push` to this location with this credential. This credential can also be configured via a Secret reference. See [here](tanzu-build-service/install-tbs.html#install-secret-refs) for details.
+    * For Google Cloud Registry, use the contents of the service account json file.
+- `TANZUNET-USERNAME` and `TANZUNET-PASSWORD` are the email address and password that you use to log in to VMware Tanzu Network. Your VMware Tanzu Network credentials enable you to configure the dependencies updater. This resource accesses and installs the build dependencies (buildpacks and stacks) Tanzu Build Service needs on your cluster. It can also optionally keep these dependencies up to date as new versions are released on VMware Tanzu Network. This credential can also be configured via a Secret reference. See [here](tanzu-build-service/install-tbs.html#install-secret-refs) for details.
+- `DESCRIPTOR-NAME` is the name of the descriptor to import. See more details [here](tanzu-build-service/tbs-about.html#dependencies-descriptors). Available options are:
+    * `lite` (default if unset) has a smaller footprint that enables faster installations.
+    * `full` optimized to speed up builds and includes dependencies for all supported workload types.
 - `SERVER-NAME` is the hostname of the registry server. Examples:
     * Harbor has the form `server: "my-harbor.io"`
     * Dockerhub has the form `server: "index.docker.io"`
@@ -251,8 +253,10 @@ this can reuse the `tap-registry` secret created in
 >`enable_automatic_dependency_updates: true` causes the dependency updater to update
 >Tanzu Build Service dependencies (buildpacks and stacks) when they are released on
 >VMware Tanzu Network. Use `false` to pause the automatic update of Build Service dependencies.
->When automatic updates are paused, the pinned version of the descriptor for TAP 1.0.2 is [100.0.267](https://network.pivotal.io/products/tbs-dependencies#/releases/1053790)
->If left undefined, this value is `false`.
+>When automatic updates are paused, the pinned version of the descriptor for TAP 1.1.0 is
+>[100.0.279](https://network.pivotal.io/products/tbs-dependencies#/releases/1066670)
+>If left undefined, this value is `false`. For details about updating dependencies manually, see
+>[here](tanzu-build-service/tbs-about.html#dependencies-manual).
 
 ### <a id='light-profile'></a> Light Profile
 
@@ -305,6 +309,7 @@ your `tap-values.yml`, as summarized in the following table:
 
 |Package|Top-level Key|
 |----|----|
+|_see table below_|`shared`|
 |API portal|`api_portal`|
 |Application Accelerator|`accelerator`|
 |Application Live View|`appliveview`|
@@ -312,6 +317,8 @@ your `tap-values.yml`, as summarized in the following table:
 |Application Live View Conventions|`appliveview-conventions`|
 |Cartographer|`cartographer`|
 |Cloud Native Runtimes|`cnrs`|
+|Convention Controller|`convention_controller`|
+|Source Controller|`source_controller`|
 |Supply Chain|`supply_chain`|
 |Supply Chain Basic|`ootb_supply_chain_basic`|
 |Supply Chain Testing|`ootb_supply_chain_testing`|
@@ -323,6 +330,12 @@ your `tap-values.yml`, as summarized in the following table:
 |Build Service|`buildservice`|
 |Tanzu Application Platform GUI|`tap_gui`|
 |Learning Center|`learningcenter`|
+
+Shared Keys define values that configure multiple packages. These keys are defined under the `shared` Top-level Key, as summarized in the following table:
+
+|Shared Key|Used By|Description|
+|----|----|----|
+|`ca_cert_data`|`convention_controller`, `source_controller`|Optional: PEM Encoded certificate data to trust TLS connections with a private CA.|
 
 For information about package-specific configuration, see [Installing individual packages](install-components.md).
 
@@ -422,7 +435,7 @@ contour:
         LBType: nlb
 ```
 
-## <a id='access-tap-gui'></a> Access the Tanzu Application Platform GUI
+## <a id='access-tap-gui'></a> Access Tanzu Application Platform GUI
 
 To access Tanzu Application Platform GUI, you'll be able to use the hostname that is pointed at the shared ingress you configure above. If you'd prefer a LoadBalancer for Tanzu Application Platform GUI then you can see how to configure that in the [Accessing Tanzu Application Platform GUI](tap-gui/accessing-tap-gui.md) section.
 

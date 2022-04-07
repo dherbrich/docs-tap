@@ -1,8 +1,10 @@
 # Conventions
 
-When submitting the following pod `Pod Intent` on each convention, the output may change depending on the applied convention.
+When submitting the following pod `Pod Intent` on each convention,
+the output may change depending on the applied convention.
 
-The submitted pod intent can be:
+Before any spring boot conventions are applied, the pod intent will
+look something like the following:
 
   ```yaml
   apiVersion: conventions.apps.tanzu.vmware.com/v1alpha1
@@ -16,6 +18,40 @@ The submitted pod intent can be:
         - name: workload
           image: springio/petclinic
   ```
+
+Most of the Spring Boot conventions will either modify or add properties to the environment variable `JAVA_TOOL_OPTIONS`.
+
+If a `JAVA_TOOL_OPTIONS` property already exists for a workload, the convention will use the existing value rather than the value the convention has been designed to apply by default (The provided property value will be used for the pod spec mutation.)
+
+## <a id="set-java-tool-options"></a> Set the `JAVA_TOOL_OPTIONS` property for a workload
+
+To set `JAVA_TOOL_OPTIONS`, do one of the following:
+
+- **Use the Tanzu CLI `apps` plug-in:** When creating or updating a workload,
+set a `JAVA_TOOL_OPTIONS` property using the `--env` flag by running:
+
+    ```
+    tanzu apps workload create APP-NAME --env JAVA_TOOL_OPTIONS="-DPROPERTY-NAME=VALUE"
+    ```
+    For example, to set the management port to `8080` rather than the
+    [spring-boot-actuator-convention](#spring-boot-actuator-convention) default port `8081`, run:
+    ```
+    tanzu apps workload create APP-NAME --env JAVA_TOOL_OPTIONS="-Dmanagement.server.port=8080"
+    ```
+- **Use the `workload.yaml`:** Provide one or more values for the `JAVA_TOOL_OPTIONS`
+property in the `workload.yaml` as follows:
+
+    ```
+    apiVersion: carto.run/v1alpha1
+    kind: Workload
+    ...
+    spec<!-- |specifications| is preferred. -->:
+     env<!-- |environment| is preferred -->:
+     - name: JAVA_TOOL_OPTIONS
+       value: -Dmanagement.server.port=8082
+     source:
+    ...
+    ```
 
 ## <a id="spring-boot-convention"></a>Spring Boot convention
 
@@ -199,9 +235,31 @@ Example of PodIntent after applying the convention:
 
 ## <a id="spring-boot-actuator-convention"></a>Spring Boot actuator convention
 
-In the `bom` file's metadata, under `dependencies`, there is a `dependency` with the name `spring-boot-actuator`. The convention `spring-boot-actuator` adds the management port and the base path to the the environment variable `JAVA_TOOL_OPTIONS`. It also adds an __annotation__ (`boot.spring.io/actuator`) where the actuator is accessed.
+In the metadata for the `SBOM` file, under `dependencies`, there is a `dependency`
+with the name `spring-boot-actuator`. The `spring-boot-actuator` convention does the following:
 
-For easy access to the management context of the Spring Boot application, you can create a service pointing to port `8081` and base path `/actuator`.
+1. Sets the management port in the `JAVA_TOOL_OPTIONS` environment variable to `8081`.
+1. Sets the base path in the `JAVA_TOOL_OPTIONS` environment variable to `/actuator`.
+1. Adds an annotation, `boot.spring.io/actuator`, to where the actuator is accessed.
+
+The management port is set to port `8081` for security reasons.
+Although you can prevent public access to the actuator endpoints that are exposed
+on the management port when it is set to the default `8080`, the threat of
+exposure through internal access remains.
+The best practice for security is to set the management port to something other than `8080`.
+
+However, if the management port number is provided using the `-Dmanagement.server.port`
+property in `JAVA_TOOL_OPTIONS`, the Spring Boot actuator convention will respect the value provided for that property.
+The management port will be set to the provided port number rather than `8081`.
+For instructions for providing the management port number for an application, see
+[Set the `JAVA_TOOL_OPTIONS` property for a workload](#set-java-tool-options) earlier in this topic.
+
+Alternative methods for setting the management port are overwritten.
+The convention overrides other common methods to configure the management port
+such as `application.properties/yml` and `config server`.
+
+You can access the management context of a Spring Boot application by creating
+a service pointing to port `8081` and base path `/actuator`.
 
 Example of PodIntent after applying the convention:
 
@@ -338,7 +396,7 @@ The _Service intent_ conventions do not change the behavior of the final deploym
 The list of the supported intents are:
 
   - MySQL
-    - __Name__: `service-intent-mysql` 
+    - __Name__: `service-intent-mysql`
     - __Label__: `services.conventions.apps.tanzu.vmware.com/mysql`
     - __Dependencies__: `mysql-connector-java`, `r2dbc-mysql`
   - PostreSql

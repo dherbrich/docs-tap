@@ -123,9 +123,9 @@ To deploy your application, you must download an accelerator, upload it on your 
     --yes \
     --namespace YOUR-DEVELOPER-NAMESPACE
     ```
-    
+
     Where `YOUR-DEVELOPER-NAMESPACE` is the namespace configured in step 6.
-    
+
     For more information, see [Tanzu Apps Workload Create](cli-plugins/apps/command-reference/tanzu-apps-workload-create.md).
 
     > **Note:** This deployment uses an accelerator source from Git, but in later steps you use the VSCode extension
@@ -136,7 +136,7 @@ To deploy your application, you must download an accelerator, upload it on your 
     ```
     tanzu apps workload tail tanzu-java-web-app --since 10m --timestamp --namespace YOUR-DEVELOPER-NAMESPACE
     ```
-    
+
     Where `YOUR-DEVELOPER-NAMESPACE` is the namespace configured in step 6.
 
 9. After the workload is built and running, you can view the Web App in your browser. View the URL of the Web App by running the command below, and then press **ctrl-click** on the
@@ -145,7 +145,7 @@ To deploy your application, you must download an accelerator, upload it on your 
     ```
     tanzu apps workload get tanzu-java-web-app --namespace YOUR-DEVELOPER-NAMESPACE
     ```
-    
+
     Where `YOUR-DEVELOPER-NAMESPACE` is the namespace configured in step 6.
 
     ![Tanzu-java-web-app default screen](images/getting-started-tap-gui-8.png)
@@ -158,7 +158,7 @@ To deploy your application, you must download an accelerator, upload it on your 
 
     ![REGISTER button on the right side of the header](images/getting-started-tap-gui-5.png)
 
->**Note:** Alternatively, you can add a link to the `catalog-info.yaml` to the `tap-values.yml` configuration file in the `tap_gui.app_config.catalog.locations` section. See [Installing the Tanzu Application Platform Package and Profiles](install.md#a-idfull-profilea-full-profile).
+    Alternatively, you can add a link to the `catalog-info.yaml` to the `tap-values.yml` configuration file in the `tap_gui.app_config.catalog.locations` section. See [Installing the Tanzu Application Platform Package and Profiles](install.md#a-idfull-profilea-full-profile).
 
 1. **Register an existing component** prompts you to type a repository URL.
 Type the link to the `catalog-info.yaml` file of the tanzu-java-web-app in the Git repository field, for example,
@@ -174,7 +174,7 @@ Type the link to the `catalog-info.yaml` file of the tanzu-java-web-app in the G
 
 1. Navigate back to the home page. The catalog changes and entries are visible for further inspection.
 
->**Note:** If your Tanzu Application Platform GUI instance does not have a [PostgreSQL](tap-gui/database.md) database configured, then the `catalog-info.yaml` location must be re-registered after the instance is restarted or upgraded.
+>**Note:** If your Tanzu Application Platform GUI instance does not have a [PostgreSQL](tap-gui/database.md) database configured, the `catalog-info.yaml` location must be re-registered after the instance is restarted or upgraded.
 
 ### <a id="iterate"></a>Iterate on your application
 
@@ -304,13 +304,13 @@ To publish the new application accelerator that is created in your Git repositor
     ```
 
     Where:
-    
+
     - `YOUR-GIT-REPOSITORY-URL` is the URL of your Git repository.
     - `YOUR-GIT-BRANCH` is the name of the branch where you pushed the new `accelerator.yaml` file.
 
 2. Refresh Tanzu Application Platform GUI to reveal the newly published accelerator.
 
-    ![Another accelerator appears in the Tanzu Application Platform GUI](images/new-accelerator-deployed-v1.1.png)
+    ![Another accelerator appears in Tanzu Application Platform GUI](images/new-accelerator-deployed-v1.1.png)
 
     >**Note:** It might take a few seconds for Tanzu Application Platform GUI to refresh the catalog and add an entry for new accelerator.
 
@@ -886,10 +886,10 @@ Scan reports are automatically saved to the [Supply Chain Security Tools - Store
 
   `DIGEST` is the component version, or image digest printed in the `KUBECTL GET` command.
 
-  Important: The `Insight CLI` is separate from the Tanzu CLI.
+  > **Important:** The `Insight CLI` is separate from the Tanzu CLI.
 
-See [Query Data](scst-store/query-data.md) or [CLI Details](scst-store/cli-docs/insight.md) for
-additional examples.
+See [Tanzu Insight plug-in overview](cli-plugins/insight/cli-overview.md)
+additional information and examples.
 <br>
 
 
@@ -982,7 +982,7 @@ Use the Supply Chain Security Tools - Store CLI, called Insight,
 to query metadata that is submitted to the component after the scan step.
 
 For a complete guide on how to query the store,
-see [Querying Supply Chain Security Tools - Store](scst-store/query-data.md).
+see [Querying Supply Chain Security Tools - Store](cli-plugins/insight/query-data.md).
 
 
 #### <a id="scst-scan-next-steps"></a>Next steps
@@ -1033,7 +1033,7 @@ The value of `.status.binding.name` must point to a `Secret` in the same namespa
 
 Typically APIs including such resource types would be installed into the Tanzu Application Platform cluster as Kubernetes Operators providing CRDs and controllers to reconcile them, as is the case with the three Kubernetes Operators listed above.
 
-**Note**: There are plans to introduce tooling to Tanzu Application Platform to loosen this requirement in the near future, enabling a much wider range of services and Kubernetes Operators to integrate well with the platform. 
+**Note**: There are plans to introduce tooling to Tanzu Application Platform to loosen this requirement in the near future, enabling a much wider range of services and Kubernetes Operators to integrate well with the platform.
 
 ### <a id="stk-user-roles-responsibilities"></a> User Roles and Responsibilities
 
@@ -1370,24 +1370,24 @@ Resource to Claim:
 The information we're interested in here is the `Claim Reference`. This is the value we will pass to `--service-ref` when it comes to creating our Application Workloads, as follows:
 
 ```
-tanzu apps workload create \
-  spring-sensors-web-ui \
+tanzu apps workload create spring-sensors-consumer-web \
   --git-repo https://github.com/sample-accelerators/spring-sensors-rabbit \
   --git-branch main \
   --type web \
   --service-ref="rmq=services.apps.tanzu.vmware.com/v1alpha1:ResourceClaim:rmq-1"
 
 tanzu apps workload create \
-  spring-sensors-sensor \
-  --git-repo https://github.com/sample-accelerators/spring-sensors-sensor \
+  spring-sensors-producer \
+  --git-repo https://github.com/tanzu-end-to-end/spring-sensors-sensor \
   --git-branch main \
   --type web \
-  --service-ref="rmq=services.apps.tanzu.vmware.com/v1alpha1:ResourceClaim:rmq-1"
+  --service-ref="rmq=services.apps.tanzu.vmware.com/v1alpha1:ResourceClaim:rmq-1" \
+  --annotation=autoscaling.knative.dev/minScale="1"
 ```
 
 Usage of the `--service-ref` flag instructs Tanzu Application Platform to bind the Application Workload to the service provided in the ref. Note that here we are not passing a service ref to the `RabbitmqCluster` Service Instance directly, but rather to the Resource Claim (which itself has successfully claimed the `RabbitmqCluster` Service Instance). Refer back to the earlier diagram for an explanation as to why.
 
-Once the Workloads are ready, visit the URL of the `spring-sensors-web-ui` Application and confirm that sensor data (passing from the sensor workload to the web UI workload via our RabbitmqCluster Service Instance) is displayed.
+After the Workloads are ready, visit the URL of the `spring-sensors-consumer-web` Application and confirm that sensor data (passing from the `spring-sensors-producer` Workload to the `create spring-sensors-consumer-web` Workload using our RabbitmqCluster Service Instance) is displayed.
 
 ### <a id="stk-walkthrough-6-summary"></a> Walkthrough Summary
 
@@ -1404,13 +1404,13 @@ There are a couple of slighly more advanced services use cases not covered in th
   <tr>
     <td>Direct Secret References</td>
     <td>Bind to services running external to the cluster (e.g. in-house oracle DB)<br />Bind to services not conformant with the binding spec</td>
-    <td><a href="https://docs.vmware.com/en/Services-Toolkit-for-VMware-Tanzu/0.6/services-toolkit-0-6/GUID-reference-use_cases.html">Link</a></td>
+    <td><a href="https://docs.vmware.com/en/Services-Toolkit-for-VMware-Tanzu/0.6/services-toolkit/GUID-reference-use_cases.html#direct-secret-references">Link</a></td>
   </tr>
   <tr>
     <td>Dedicated Service Clusters</td>
     <td>Separate Application Workloads from Service Instances across dedicated clusters</td>
-    <td><a href="https://docs.vmware.com/en/Services-Toolkit-for-VMware-Tanzu/0.6/services-toolkit-0-6/GUID-reference-use_cases.html">Link</a></td>
+    <td><a href="https://docs.vmware.com/en/Services-Toolkit-for-VMware-Tanzu/0.6/services-toolkit/GUID-reference-use_cases.html#dedicated-service-clusters-using-experimental-projection-and-replication-apis">Link</a></td>
   </tr>
 </table>
 
-Please refer to the [Services Toolkit Component documentation](https://docs.vmware.com/en/Services-Toolkit-for-VMware-Tanzu/0.6/services-toolkit-0-6) for full details on the APIs and concepts underpinning Services on Tanzu Application Platform.
+Please refer to the [Services Toolkit Component documentation](https://docs.vmware.com/en/Services-Toolkit-for-VMware-Tanzu/0.6/services-toolkit/GUID-overview.html) for full details on the APIs and concepts underpinning Services on Tanzu Application Platform.

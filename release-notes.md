@@ -1,6 +1,6 @@
 # Release notes
 
-This topic contains release notes for Tanzu Application Platform v1.
+This topic contains release notes for Tanzu Application Platform v1.1
 
 ## <a id='1-1'></a> v1.1
 
@@ -8,40 +8,48 @@ This topic contains release notes for Tanzu Application Platform v1.
 
 ### <a id='1-1-new-features'></a> New features
 
-#### Tanzu Application Platform profile - iterate
-This new profile is intended for iterative development versus the path to production.
+#### Installing
 
-#### Tanzu Application Platform profile - build
+* **Tanzu Application Platform profile - Iterate** is intended for iterative development versus the path to production.
 
-#### Tanzu Application Platform profile - run
+* **Tanzu Application Platform profile - Build** is intended for the transformation of source revisions to workload revisions. Specifically, it's for hosting workloads and SupplyChains.
 
-#### Tanzu Application Platform profile - full
+* **Tanzu Application Platform profile - Run** is intended for the transformation of workload revisions to running pods. Specifically, it's for hosting deliveries and deliverables.
 
-* New packages added....
+* **Tanzu Application Platform profile - View** is intended for instances of applications related to centralized developer experiences, such as Tanzu Application Platform GUI and Metadata Store.
+
+* **Tanzu Application Platform profile - Full** contains all of the Tanzu Application Platform packages. New packages in the Full profile:
+    - Application Live View (Build)
+    - Application Live View (Run)
+    - Application Live View (GUI)
+    - Default Roles
+    - Telemetry
 
 #### Default roles for Tanzu Application Platform
 
-- Introduction of [five new default roles](authn-authz/overview.md) and related permissions that apply to **k8s resources**. These roles help operators set up common sets of permissions to limit the access that users and service accounts have on a cluster that runs Tanzu Application Platform.
-  - Three roles are for users, including: app-editor, app-viewer and app-operator.
-  - Two roles are for “robot” or system permissions, including: workload and deliverable.
+There are five new default roles and related permissions that apply to Kubernetes resources.
+These roles help operators set up common sets of permissions to limit the access that users and
+service accounts have on a cluster that runs Tanzu Application Platform.
 
+Three roles are for users, including `app-editor`, `app-viewer` and `app-operator`.
+Two roles are for “robot” or system permissions, including `workload` and `deliverable`.
 
-#### Tanzu Application Platform GUI
+For more information, see [Overview of Default Roles](authn-authz/overview.md).
 
-- **Runtime Resources Visibility plug-in:** explanation here
-- **Supply Chain Choreographer plug-in:** Added a new graphical representation of the execution of a workload through an installed supply chain. This  includes CRDs in the supply chain, the source results of each stage, as well as details to facilitate the troublshooting of workloads on their path to production. 
-
-#### Application Accelerator
+#### <a id="app-acc-features"></a> Application Accelerator
 
 - Option values can now be validated using regex
-- TLS for ingress can be enabled using `ingress.enable_tls` flag during package install
+- TLS for ingress are enabled using `ingress.enable_tls` flag during package install
 
 #### Application Live View
 
-- Enabled multiple cluster support for Application Live View.
-- Split Application Live View components into three packages with new package reference names.
-- Enabled structured JSON logging for App Live View to meet the TAP logging requirements.
-- Made App Live View Convention Service compatible with the cert-manager version 1.7.1.
+- Application Live View supports a multi-cluster setup now
+- Application Live View components are split into three bundles with new package reference names (backend, connector, conventions)
+- Application Live View Convention Service is compatible with cert-manager v1.7.1
+- Application Live View Convention takes the management port setting from the Spring Boot Convention into account
+- Structured JSON logging is integrated into Application Live View Backend and Application Live View Convention
+- Updated Spring Native v0.10.5v to v0.10.6
+- Updated Spring Boot to v2.5.12 to address [CVE-2022-22965](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2022-22965) and [CVE-2020-36518](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-36518)
 
 #### Tanzu CLI - Apps plug-in
 
@@ -49,12 +57,16 @@ This new profile is intended for iterative development versus the path to produc
   - Accept `workload.yaml` from stdin (through `--file -`).
   - Enable providing `spec.build.env` values (through new `–build.env` flag).
   - When `--git-repo` and `--git-tag` are provided, `git-branch` is not required.
+  - Add new `--annotations` flag. Annotation(s) provided are propagated to the running pod for the workload.
 - `workload list`:
   - Shorthand `-A` can be passed in for `--all-namespaces`.
 - `workload get`:
   - Service Claim details are returned in command output.
-  - The existing STATUS value in the Pods table in the output reflects when a pod is “Terminating.” 
+  - The existing STATUS value in the Pods table in the output reflects when a pod is “Terminating.”
 
+**Deprecation**
+* The `namespace` value you can pass for the `--service-ref` flag is deprecated.
+  * A deprecation warning message is added to the `workload create/update/apply...` when user specifies a namespace in the `--service-ref` object.
 
 #### Service Bindings
 
@@ -65,75 +77,108 @@ This new profile is intended for iterative development versus the path to produc
 
 #### Source Controller
 
+- Enable Source Controller to connect to image registries that use self-signed or private certificate authorities to support airgapped installations
+  - This is an optional configuration
+  - See [Source Controller Installation](source-controller/install-source-controller.md) for details
 - Applied [RFC-3339](https://datatracker.ietf.org/doc/html/rfc3339) timestamps to source controller logs.
 - Added Tanzu Application Platform aggregate roles to support Tanzu Application Platform Authentication and Authorization (new feature referenced above).
 
 #### Spring Boot Conventions
 
-- Applied [RFC-3339](https://datatracker.ietf.org/doc/html/rfc3339) timestamps to service binding logs.
-The following new conventions are applied to spring boot apps v2.6 and later:
-- Add Kubernetes liveness and readiness probes by using spring boot health endpoints.
-- Change management port from 8080 to 8081 to increase security of the management port.
+- **Set the management port to `8081`:** This is instead of the default port `8080`.
+  - This change increases the security of Spring Boot apps running on the
+  platform by preventing access to actuator endpoints. Actuator endpoints
+  can leak sensitive information and allow access to trigger actions that can impact the app.
+  - If the app explicitly sets the management port using the `JAVA_TOOL_OPTIONS`
+  in the `workload.yaml`, the Spring Boot conventions will respect that setting
+  and will not set the management port to `8081`. For more information, see
+  [Set the `JAVA_TOOL_OPTIONS` property for a workload](spring-boot-conventions/reference/CONVENTIONS.md#set-java-tool-options).
+  - The convention overrides other common management port configuration methods
+  such as `application.properties/yml` and `config server`.
+- **RFC-3339 timestamps:** Applied [RFC-3339](https://datatracker.ietf.org/doc/html/rfc3339) timestamps to service binding logs.
+- **Added Kubernetes liveness and readiness probes by using Spring Boot health endpoints:**
+  - This convention is applied to Spring Boot v2.6 and later apps.
+  - The probes will be exposed on the main serving port for the app, which is port `8080` by default.
+
+#### Supply Chain Choreographer
+
+- All Supply Chains provided by Tanzu Application Platform support pre-built images for workloads
+- Supply Chains can select workloads by fields and expressions in addition to labels
+- Supply Chains can select which template to stamp out based on optional criteria
+- Workloads include stamped resource references in their status
 
 #### Supply Chain Security Tools - Scan
 
 - Support for configuring Supply Chain Security Tools - Scan to remotely connect to Supply Chain Security Tools - Store in a different cluster.
 
-#### Supply Chain Security Tools – Sign
+#### Supply Chain Security Tools - Sign
 
 - Support configuring Webhook resources
 - Support configuring Namespace where webhook is installed
 - Support for registries with self-signed certificates
 
-
 #### Supply Chain Security Tools - Store
 
-- Introduced v1 endpoints to query with pagination
-  - Added v1 GET images endpoint
-  - Added v1 GET sources endpoint
-  - Added v1 GET packages endpoint
-  - Added v1 GET vulnerabilities endpoint
 - Added Contour Ingress support with custom domain name
-- Added related packages to image and source vulnerabilities
-- Created Tanzu CLI plugin called Insight
+- Created Tanzu CLI plug-in called `insight`
+  - Currently, `insight` plug-in only supports MacOS and Linux.
 - Upgraded golang version from `1.17.5` to `1.17.8`
+
+#### <a id="gui-features"></a> Tanzu Application Platform GUI
+
+- Added improvements to the information presentation and filtering mechanisms of the Runtime Resources tab
+- Added the new Supply Chain plugin
+- Added the Backstage API Docs Plugin
+- Updated overall theme to Clarity City
+- Added compatibility with v1beta3 Backstage Templates
+- Small security fixes
+- Various accessibility and styling fixes
+
+Plug-in improvements and additions include:
+
+- **Runtime Resources Visibility plug-in:**
+  - Textual and enumerated table column filters for ease of search
+  - Meaningful error messages and paths forward to troubleshoot issues
+  - Tags in Knative revision table on the details page
+  - Kubernetes Service on the resources page to provide more insights into Kubernetes service details
+  - Improved UI components for a better, and more accessible, user experience
+
+- **Supply Chain Choreographer plug-in:**
+  - Added a graphical representation of the execution of a workload by using an installed supply chain. This includes CRDs in the supply chain, the source results of each stage, and details to facilitate the troubleshooting of workloads on their path to production.
+
+#### Functions (Beta)
+
+The function experience on Tanzu Application Platform enables developers to deploy functions, use starter templates to bootstrap their function and write only the code that matters to your business. Developers can run a single CLI command to deploy their functions to an auto-scaled cluster.
+
+For more information, see [Functions](workloads/functions.md).
 
 ### <a id='1-1-breaking-changes'></a> Breaking changes
 
-#### Application Accelerator
+#### <a id="app-acc-changes"></a> Application Accelerator
 
 - When enabling ingress the TLS support must now be explicitly enabled using `ingress.tls_enable`.
-
-#### Supply Chain Security Tools - Store
-
-- Insight CLI is deprecated, customers can now use Tanzu CLI plugin called Insight.
-  - Renamed all instances of `create` verb to `add` for all CLI commands.
 
 #### Supply Chain Security Tools - Scan
 
 - **Deprecated API version:** API version `scanning.apps.tanzu.vmware.com/v1alpha1` is deprecated.
 
+#### Supply Chain Security Tools - Store
+
+- The independent `insight` CLI is deprecated, customers can now use Tanzu CLI plugin called `insight`.
+  - Renamed all instances of `create` verb to `add` for all CLI commands.
+  - Currently, `insight` plug-in only supports MacOS and Linux.
+
 ### <a id='1-1-security-issues'></a> Security issues
 
 This release has the following security issues:
 
+None.
 
 ### <a id='1-1-resolved-issues'></a> Resolved issues
 
-#### Application Accelerator
+#### <a id="app-acc-resolved"></a> Application Accelerator
 
 - Accelerator engine no longer fails with "java.lang.OutOfMemoryError: Direct buffer memory" when processing very large Git repositories.
-
-#### Tanzu CLI - Apps plug-in
-
-- Apps plug-in no longer crashes when `KUBECONFIG` includes the colon (`:`) config file delimiter.
-- `tanzu apps workload get`: Passing in `--output json` and `--export` flags together exports the workload in JSON rather than YAML.
-- `tanzu apps workload tail`: Duplicate log entries created for init containers are removed.
-- `tanzu apps workload create/update/apply`
-  - When the `--wait` flag passed and the prompt "Do you want to create this workload?" 
-  is declined, the command immediately exits 0 rather than hanging (continuing to "wait").
-  - Workload name is now validated when the workload values are passed in through `--file workload.yaml`.
-  - When creating/applying a workload from –local-path, if user answers “No” to the prompt “Are you sure you want to publish your local code to [registry name] where others may be able to access it?”, the command now exits 0 immediately rather than showing the workload diff and prompting to continue with workload creation.
 
 #### Services Toolkit
 
@@ -141,19 +186,28 @@ This release has the following security issues:
 - Fixed a potential race condition during reconciliation of ResourceClaims which might cause the Services Toolkit manager to stop responding.
 - Updated configuration of the Services Toolkit carvel Package to prevent an unwanted build up of ConfigMap resources.
 
-#### Supply Chain Security Tools – Scan
+#### Supply Chain Security Tools - Scan
 
 - Resolved two scan jobs and two scan pods being created when reconciling `ScanTemplates` and `ScanPolicies`.
-- Upgraded package `client_golang` to version `v1.11.1` to address CVE [CVE-2022-21698](https://nvd.nist.gov/vuln/detail/CVE-2022-21698)
 
 #### Supply Chain Security Tools - Store
 
-- Fixed an issue where querying a source report with local path name would return the following error: `{ "message": "Not found" }`
+- Fixed an issue where querying a source report with local path name would return the following error: `{ "message": "Not found" }`.
+- Return related packages when querying image and source vulnerabilities.
+- Ratings are updated when updating vulnerabilities.
 
-#### Grype Scanner
+#### Tanzu CLI - Apps plug-in
 
-- Upgraded golang version to `1.17.8` to address CVE [CVE-2022-24921](https://nvd.nist.gov/vuln/detail/CVE-2022-24921)
-- Upgraded photon to address CVEs [CVE-2022-23308](https://nvd.nist.gov/vuln/detail/CVE-2022-23308), [CVE-2022-0778](https://nvd.nist.gov/vuln/detail/CVE-2022-0778).
+- Apps plug-in no longer fails when `KUBECONFIG` includes the colon (`:`) config file delimiter.
+- `tanzu apps workload get`: Passing in `--output json` and `--export` flags together exports the workload in JSON rather than YAML.
+- `tanzu apps workload tail`: Duplicate log entries created for init containers are removed.
+- `tanzu apps workload create/update/apply`
+  - When the `--wait` flag passed and the dialog box "Do you want to create this workload?"
+  is declined, the command immediately exits 0, rather than hanging and continuing to wait.
+  - Workload name is now validated when the workload values are passed in by using `--file workload.yaml`.
+  - When creating or applying a workload from –local-path, if user answers “No” to the prompt “Are you sure you want to publish your local code to [registry name] where others may be able to access it?”, the command now exits 0 immediately rather than showing the workload diff and prompting to continue with workload creation.
+  - `.spec.build.env` in workload YAML definition file is being removed when using Tanzu apps workload apply command.
+
 
 ### <a id='1-1-known-issues'></a> Known issues
 
@@ -161,328 +215,105 @@ This release has the following security issues:
 
 - **Deprecated profile:** Tanzu Application Platform light profile is deprecated.
 
+#### Application Live View
+
+- **Application Live View Connector sometimes does not connect to the back end:**
+Search the Application Live View Connector pod logs for issues with rsocket connection
+to the back end. If you find any issues, delete the connector pod to recreate it:
+
+    ```
+    kubectl -n app-live-view delete pods -l=name=application-live-view-connector
+    ```
+
+- **Application Live View Convention auto-exposes all actuators:**
+Application Live View Convention exposes all Spring Boot actuator endpoints by default to
+whatever is configured using the Spring Boot Convention for the management port.
+You can change this configuration if it does not suit your needs.
+For more information, see [Configuring an Application](https://docs.vmware.com/en/Application-Live-View-for-VMware-Tanzu/1.0/docs/GUID-app-config.html).
+
+- **Frequent Application Live View Connector restarts:**
+In some cases, the Application Live View Connector component restarts frequently.
+This usually doesn't cause problems when using Application Live View.
+
+- **No structured JSON logging on the connector:**
+The format of the log output of the Application Live View Connector component is not currently
+aligned with the standard Tanzu Application Platform logging format. A fix is planned for v1.1.1. <!-- TAP v1.1.1 ? -->
+
+
 #### Grype scanner
 
-**Scanning Java source code may not reveal vulnerabilities:** Source Code Scanning only scans
-files present in the source code repository.
-No network calls are made to fetch dependencies.
+- **Scanning Java source code may not reveal vulnerabilities:** Source Code Scanning only scans
+files present in the source code repository. No network calls are made to fetch dependencies.
 For languages using dependency lock files, such as Golang and Node.js, Grype uses the
 lock files to check the dependencies for vulnerabilities.
-
-For Java, dependency lock files are not guaranteed, so Grype instead uses the
+- For Java, dependency lock files are not guaranteed, so Grype instead uses the
 dependencies present in the built binaries (`.jar` or `.war` files).
-
-Because VMware does not recommend committing binaries to source code repositories, Grype
+- Because VMware does not recommend committing binaries to source code repositories, Grype
 fails to find vulnerabilities during a Source Scan. The vulnerabilities are still found during the
 Image Scan, after the binaries are built and packaged as images.
 
 #### Supply Chain Choreographer plug-in
-- **Details for ConfigMap CRD not appearing:** `Unable to retrieve conditions for ConfigMap...` error appears in details section after clicking on the ConfigMap stage in the graph view of a supply chain. This does not necessarily mean that the workload failed its execution through the supply chain.
-#### Supply Chain Security Tools – Scan
+
+- **Details for ConfigMap CRD not appearing:** The error `Unable to retrieve conditions for ConfigMap...`
+appears in the details section after clicking on the ConfigMap stage in the
+graph view of a supply chain.
+This error does not necessarily mean that the workload failed its execution through the supply chain.
+- **Scan results not shown:** Current CVEs found during Image or Build scanning do not appear. However, results are still present in the metadata store and are available by using the Tanzu CLI.
+
+#### Supply Chain Security Tools - Scan
 
 - **Scan Phase indicates `Scanning` incorrectly:** Scans have an edge case that when an error
   occurs during scanning, the `Scan Phase` field is not updated to `Error` and remains in the
   `Scanning` phase. Read the scan pod logs to verify the existence of an error.
+- **Multi-Cluster Support: Error sending results to Supply Chain Security Tools - Store (Store) running in a different cluster:** The [Store Ingress and multicluster support](scst-store/ingress-multicluster.md) document instructs on how to create `SecretExports` to share necessary secrets for communicating with the Store. During installation, Supply Chain Security Tools - Scan (Scan) automatically creates the `SecretImport` necessary for ingesting the TLS CA certificate secret, but is missing the `SecretImport` for the RBAC Auth token. As a workaround, apply the following `yaml` (if necessary, updating the namespaces) to the cluster running Scan and then perform a rolling restart (e.g. `kubectl rollout restart deployment.apps/scan-link-controller-manager -n scan-link-system`):
+```yaml
+---
+apiVersion: secretgen.carvel.dev/v1alpha1
+kind: SecretImport
+metadata:
+  name: store-auth-token
+  namespace: scan-link-system
+spec:
+  fromNamespace: metadata-store-secrets
+```
+The necessary `Secret` for the RBAC Auth token will be created and the scan can be re-run.
 - **User sees error message saying Supply Chain Security Tools - Store (Store) is not configured even though configuration values were supplied:** The Scan Controller experiences a race-condition when deploying Store in the same cluster, that shows Store as not configured, even when it is present and properly configured. This happens when the Scan Controller is deployed and reconciled before the Store is reconciled and the corresponding secrets are exported to the Scan Controller namespace. As a workaround to this, once your Store is successfully reconciled, you would need to restart your Supply Chain Security Tools - Scan deployment by running: `kubectl rollout restart deployment.apps/scan-link-controller-manager -n scan-link-system`. If you deployed Supply Chain Security Tools - Scan to a different namespace than the default one, you can replace `-n scan-link-system` with `-n <my_custom_namespace>`.
 
 #### Supply Chain Security Tools - Store
 
-- **Persistent volume retains data**
-  If Supply Chain Security Tools - Store is deployed, deleted, and then redeployed the
-  `metadata-store-db` Pod fails to start if the database password changed during redeployment.
-  This is caused by the persistent volume used by postgres retaining old data, even though the retention
-  policy is set to `DELETE`.
+- **`insight` CLI plug-in does not support Windows:**
 
-  To resolve this issue, see [CrashLoopBackOff from Password Authentication Fails](troubleshooting.html#password-authentication-fails)
-  in _Troubleshooting Tanzu Application Platform_.
+    Currently, `insight` plug-in only supports MacOS and Linux.
 
-  > **Warning:** Changing the database password deletes your Supply Chain Security Tools - Store data.
+- **Existing packages with new vulnerabilities not updated:**
 
-- **Missing persistent volume:**
-  After Supply Chain Security Tools - Store is deployed, `metadata-store-db` Pod might fail for missing
-  volume while `postgres-db-pv-claim` pvc is in the `PENDING` state.
-  This issue may occur if the cluster where Supply Chain Security Tools - Store is deployed does not have
-  `storageclass` defined.
+    It is a known issue that **Supply Chain Security Tools - Store** does not correctly save new vulnerabilities for a package that was already submitted in a previous report. This issue causes new vulnerabilities not saved to the database.
 
-  The provisioner of `storageclass` is responsible for creating the persistent volume after
-  `metadata-store-db` attaches `postgres-db-pv-claim`. To resolve this issue, see
-  [Missing Persistent Volume](troubleshooting.html#missing-persistent-volume)
-  in _Troubleshooting Tanzu Application Platform_.
+- **Persistent volume retains data:**
 
-- **No support for installing in custom namespaces:**
-  Supply Chain Security Tools — Store is deployed to the `metadata-store` namespace.
-  There is no support for configuring the namespace.
+    If **Supply Chain Security Tools - Store** is deployed, deleted, redeployed, and the database password is changed during the redeployment, the
+    `metadata-store-db` pod fails to start.
+    This is caused by the persistent volume used by postgres retaining old data, even though the retention
+    policy is set to `DELETE`.
 
-## <a id='1-0'></a> v1.0
-
-**Release Date**: January 11, 2022
-
-### Known issues
-
-This release has the following issues:
-
-#### Installing
-
-When you install Tanzu Application Platform on Google Kubernetes Engine (GKE), Kubernetes control
-plane can be unavailable for several minutes during the installation.
-Package installations can enter the `ReconcileFailed` state. When API server becomes available,
-packages try to reconcile to completion.
-
-This can happen on newly provisioned clusters that have not finished GKE API server autoscaling.
-When GKE scales up an API server, the current Tanzu Application install continues, and any subsequent installs succeed without interruption.
-
-#### Application Accelerator
-
-- Build scripts provided as part of an accelerator do not have the execute bit set when a new
-  project is generated from the accelerator.
-
-    To resolve this issue, explicitly set the execute bit. For more information, see
-    [Execute Bit Not Set for App Accelerator Build Scripts](troubleshooting.html#build-scripts-lack-execute-bit)
-    in _Troubleshooting Tanzu Application Platform_.
-#### Application Live View
-
-The Live View section in Tanzu Application Platform GUI might show
-"No live information for pod with ID" after deploying Tanzu Application Platform workloads.
-
-Resolve this issue by recreating the Application Live View Connector pod. For more information, see
-[No Live Information for Pod with ID Error](troubleshooting.html#no-live-information) in
-_Troubleshooting Tanzu Application Platform_.
-
-#### Convention Service
-
-Convention Service does not currently support custom certificates for integrating with a private
-registry. Support for custom certificates is planned for an upcoming release.
-
-#### Developer Conventions
-
-**Debug Convention might not apply:** If you upgraded from Tanzu Application Platform v0.4 then the
-the debug convention might not apply to the app run image. This is because of the missing SBOM data
-in the image.
-To prevent this issue, delete existing app images that were built using Tanzu Application Platform
-v0.4.
-
-For more information, see [Debug Convention May Not Apply](troubleshooting.html#debug-convention) in
-_Troubleshooting Tanzu Application Platform_.
-
-#### Grype scanner
-
-**Scanning Java source code may not reveal vulnerabilities:** Source Code Scanning only scans
-files present in the source code repository.
-No network calls are made to fetch dependencies.
-For languages that make use of dependency lock files, such as Golang and Node.js, Grype uses the
-lock files to check the dependencies for vulnerabilities.
-
-In the case of Java, dependency lock files are not guaranteed, so Grype instead uses the
-dependencies present in the built binaries (`.jar` or `.war` files).
-
-Because best practices do not include committing binaries to source code repositories, Grype
-fails to find vulnerabilities during a Source Scan. The vulnerabilities are still found during the
-Image Scan, after the binaries are built and packaged as images.
-
-#### Learning Center
-
-- **Training Portal in pending state:** Under certain circumstances, the training portal is stuck in
-a pending state. To resolve this issue, see
-[Training portal stays in pending state](learning-center/troubleshoot-learning-center.md#training-portal-pending).
-
-- **image-policy-webhook-service not found:** If you are installing a Tanzu Application Platform
-profile, you might see the error:
-
-    ```
-    Internal error occurred: failed calling webhook "image-policy-webhook.signing.apps.tanzu.vmware.com": failed to call webhook: Post "https://image-policy-webhook-service.image-policy-system.svc:443/signing-policy-check?timeout=10s": service "image-policy-webhook-service" not found
-    ```
-
-    This is a rare condition error among some packages. To recover from this error, redeploy the
-    `trainingPortal` resource.
-
-- **Cannot Update Parameters:**
-Normally you must update some parameters provided to the Learning Center Operator. These parameters
-include ingressDomain, TLS secret, ingressClass, and others.
-
-    After updating parameters, if the Training Portals do not work or you cannot see the updated values,
-    redeploy `trainingportal` in a maintenance window where Learning Center is unavailable while the
-    `systemprofile` is updated.
-
-- **Increase your cluster's resources:** Node pressure may be caused by not enough nodes or not
-enough resources on nodes for deploying the workloads you have. In this case, follow your cloud
-provider instructions on how to scale out or scale up your cluster.
-
-#### Supply Chain Choreographer
-
-Deployment from a public Git repository might require a Git SSH secret.
-Workaround is to configure SSH access for the public Git repository.
-
-#### Supply Chain Security Tools – Scan
-
-- **Events show `SaveScanResultsSuccess` incorrectly:** `SaveScanResultsSuccess` appears in the
-events when the Supply Chain Security Tools - Store is not configured. The `.status.conditions`
-output, however, correctly reflects `SendingResults=False`.
-- **Scan Phase indicates `Scanning` incorrectly:** Scans have an edge case where, when an error has
-occurred during scanning, the Scan Phase field is not updated to `Error` and instead remains in the
-`Scanning` phase. Read the scan Pod logs to verify there was an error.
-- **CVE print columns are not getting populated:** After running a scan and using `kubectl get` on
-the scan, the CVE print columns (CRITICAL, HIGH, MEDIUM, LOW, UNKNOWN, CVETOTAL) are not populated.
-You can run `kubectl describe` on the scan and look for `Scan completed. Found x CVE(s): ...` under
-`Status.Conditions` to find these severity counts and `CVETOTAL`.
-- **Failing Blob source scans:** Blob source scans have an edge case where, when a compressed file
-without a `.git` directory is provided, sending results to the Supply Chain Security Tools - Store
-fails and the scanned revision value is not set. The current workaround is to add the `.git`
-directory to the compressed file.
-- **Scan controller pod fails:** If there is a misconfiguration
-(i.e. secretgen-controller not running, wrong CA secret name) after enabling the
-metadata store integration, the controller pod fails. The current workaround is
-to update the `tap-values.yaml` file with the proper configuration and update the application.
-- **Deleted resources keep reconciling:** After creating a scan CR and deleting it,
-the controllers keep trying to fetch the deleted resource, resulting in a `not found`
-or `unable to fetch` log entry with every reconciliation cycle.
-- **Scan controller crashes when Git clone fails:** If this occurs, confirm that
-the Git URL and the SSH credentials are correct.
-
-#### Supply Chain Security Tools - Sign
-
-- **Blocked pod creation:** If all webhook nodes or pods are evicted by the cluster or scaled down,
-the admission policy blocks any pods from being created in the cluster.
-To resolve the issue, delete `MutatingWebhookConfiguration` and re-apply it when the cluster is
-stable.
-
-- **MutatingWebhookConfiguration prevents pods from being admitted:** Under certain circumstances,
-  if the `image-policy-controller-manager` deployment pods do not start up before the
-  `MutatingWebhookConfiguration` is applied to the cluster, it can prevent the admission of all
-  pods.
-
-    To resolve this issue, delete the `MutatingWebhookConfiguration` resource, then restore the
-    `MutatingWebhookConfiguration` resource to re-enable image signing enforcement. For instructions,
-    see [MutatingWebhookConfiguration Prevents Pod Admission](troubleshooting.html#pod-admission-prevented)
-    in _Troubleshooting Tanzu Application Platform_.
-
-- **Terminated kube-dns prevents new pods from being admitted:**
-If `kube-dns` is terminated, it prevents the admission controller from being able to reach the image policy controller. This prevents new pods from being admitted, including core services like kube-dns.
-
-    Modify the mutating webhook configuration to exclude the `kube-system` namespace from the admission check. This allows pods in the `kube-system` to appear, which should restore `kube-dns`
-
-- **Priority class of webhook's pods might preempt less privileged pods:**
-This component uses a privileged `PriorityClass` to start up its pods in order to prevent node
-pressure from preempting its pods. However, this can cause other less privileged components to have
-their pods preempted or evicted instead.
-
-    To resolve this issue, see [Priority Class of Webhook's Pods Preempts Less Privileged Pods](troubleshooting.html#priority-class-preempts)
-    in _Troubleshooting Tanzu Application Platform_.
-
-#### Supply Chain Security Tools - Store
-
-- **CrashLoopBackOff from password authentication failed:**
-Supply Chain Security Tools - Store does not start up. You see the following error in the
-`metadata-store-app` Pod logs:
-
-    ```
-    $ kubectl logs pod/metadata-store-app-* -n metadata-store -c metadata-store-app
-    ...
-    [error] failed to initialize database, got error failed to connect to `host=metadata-store-db user=metadata-store-user database=metadata-store`: server error (FATAL: password authentication failed for user "metadata-store-user" (SQLSTATE 28P01))
-    ```
-
-    This error results when the database password was changed between deployments. This is not
-    supported. To resolve this issue, see [CrashLoopBackOff from Password Authentication Fails](troubleshooting.html#password-authentication-fails)
-    in _Troubleshooting Tanzu Application Platform_.
-
-    > **Warning:** Changing the database password deletes your Supply Chain Security Tools - Store data.
-
-- **Persistent volume retains data**
-  If Supply Chain Security Tools - Store is deployed, deleted, and then redeployed the
-  `metadata-store-db` Pod fails to start if the database password changed during redeployment.
-  This is caused by the persistent volume used by postgres retaining old data, even though the retention
-  policy is set to `DELETE`.
-
-    To resolve this issue, see [CrashLoopBackOff from Password Authentication Fails](troubleshooting.html#password-authentication-fails)
-    in _Troubleshooting Tanzu Application Platform_.
-
-    > **Warning:** Changing the database password deletes your Supply Chain Security Tools - Store data.
+    To resolve this issue, see [solution](scst-store/troubleshooting.md#persistent-volume-retains-data-solution).
 
 - **Missing persistent volume:**
-After Supply Chain Security Tools - Store is deployed, `metadata-store-db` Pod might fail for missing
-volume while `postgres-db-pv-claim` pvc is in the `PENDING` state.
-This issue may occur if the cluster where Supply Chain Security Tools - Store is deployed does not have
-`storageclass` defined.
+
+    After **Supply Chain Security Tools - Store** is deployed, `metadata-store-db` pod might fail for missing
+    volume while `postgres-db-pv-claim` pvc is in the `PENDING` state.
+    This issue might occur if the cluster where **Supply Chain Security Tools - Store** is deployed does not have
+    `storageclass` defined.
 
     The provisioner of `storageclass` is responsible for creating the persistent volume after
     `metadata-store-db` attaches `postgres-db-pv-claim`. To resolve this issue, see
-    [Missing Persistent Volume](troubleshooting.html#missing-persistent-volume)
-    in _Troubleshooting Tanzu Application Platform_.
-
-- **Querying local path source reports:**
-If a source report has a local path as the name -- for example, `/path/to/code` -- the leading
-`/` on the resulting repository name causes the querying packages and vulnerabilities to return
-the following error from the client lib and the CLI: `{ "message": "Not found" }`.<br><br>
-The URL of the resulting HTTP request is properly escaped. For example,
-`/api/sources/%2Fpath%2Fto%2Fdir/vulnerabilities`.<br><br>
-The rbac-proxy used for authentication handles this URL in a way that the response is a
-redirect. For example, `HTTP 301\nLocation: /api/sources/path/to/dir/vulnerabilities`.
-The Client Lib follows the redirect, making a request to the new URL which does not exist in the
-Supply Chain Security Tools - Store API, resulting in this error message.
+    [solution](scst-store/troubleshooting.md#missing-persistent-volume-solution).
 
 - **No support for installing in custom namespaces:**
-All of our testing uses the `metadata-store` namespace. Using a different namespace breaks
-authentication and certificate validation for the `metadata-store` API.
 
+    **Supply Chain Security Tools — Store** is deployed to the `metadata-store` namespace.
+    There is no support for configuring the namespace.
 
-#### Tanzu CLI
+#### Tanzu Application Platform GUI
 
-- `tanzu apps workload get`: Passing in `--output json` with the `--export` flag returns YAML
-rather than JSON. Support for honoring the `--output json` with `--export` is planned for the next
-release.
-- `tanzu apps workload create/update/apply`: `--image` is not supported by the default supply chain
-in Tanzu Application Platform v0.3.
-`--wait` functions as expected when a workload is created for the first time but might return
-prematurely on subsequent updates when passed with `workload update/apply` for existing workloads.
-When the `--wait` flag is included and you decline the "Do you want to create this workload?"
-prompt, the command continues to wait and must be cancelled manually.
-
-#### Tanzu Dev Tools for VSCode
-
-**Unable to configure task:** Launching the `Extension Host`, and configuring `tasks` in a workspace
-that does not contain workload YAML files might not work.
-To solve this issue, uninstall the Tanzu Dev Tools extension.
-
-**Extension Pack for Java:** In some cases, the Extension Pack for Java (`vscjava.vscode-java-pack`)
-does not automatically install. In these cases debugging does not work after Tanzu Dev Tools
-installs `live-update`.
-To solve this issue, manually install `vscjava.vscode-java-pack` from the extension marketplace.
-
-#### Services Toolkit
-
-* It is not possible for more than one application workload to consume the same service instance.
-Attempting to create two or more application workloads while specifying the same `--service-ref`
-value causes only one of the workloads to bind to the service instance and reconcile successfully.
-This limitation is planned to be relaxed in an upcoming release.
-* The `tanzu services` CLI plug-in is not compatible with Kubernetes clusters running on GKE.
-
-### <a id='1-0-security-issues'></a> Security issue
-
-The installation specifies that the installer's Tanzu Network credentials be exported to all
-namespaces. Customers can choose to mitigate this concern using one of the following methods:
-
-- Create a Tanzu Network account with their own credentials and use this for the installation
-exclusively.
-- Using [Carvel tool's imgpkg](https://carvel.dev/imgpkg/) customers can create a dedicated OCI
-registry on their own infrastructure that can comply with any required security policies that might
-exist.
-
-
-### <a id='1-0-breaking-changes'></a> Breaking changes
-
-This release has the following breaking change:
-
-**Supply Chain Security Tools - Store:** Changed package name to `metadata-store.apps.tanzu.vmware.com`.
-
-### <a id='1-0-resolved-issues'></a> Resolved issues
-
-This release has the following fixes:
-
-#### Tanzu Dev Tools for VSCode
-
-- Fixed issue where the Tanzu Dev Tools extension might not support projects with multi-document
-YAML files
-- Modified debug to remove any leftover port-forwards from past runs
-
-#### Supply Chain Security Tools - Store
-
-Upgrade golang version from `1.17.1` to `1.17.5`
+- **Runtime Resources errors:** The Runtime Resources tab shows cluster query errors when attempting to retrieve Kubernetes object details from non-full-profile clusters.

@@ -2,9 +2,9 @@
 
 ## <a id="overview"></a>Overview
 
-Functions on Tanzu Application Platform allows you to deploy function-based workloads. You can use starter templates to bootstrap your function and write only the code that matters to your business. You can run a single CLI command to deploy your function to an auto-scaled cluster.
+The function experience on Tanzu Application Platform enables developers to deploy functions, use starter templates to bootstrap their function and write only the code that matters to your business. Developers can run a single CLI command to deploy their functions to an auto-scaled cluster.
 
-This document describes how to create and deploy an HTTP function workload from an application accelerator starter template.
+This document describes how to create and deploy an HTTP function from an application accelerator starter template.
 
 >**Caution:** This functionality is currently in beta and is intended for evaluation and test purposes only.
 
@@ -16,18 +16,20 @@ Before using functions workloads on Tanzu Application Platform, complete the fol
 - Download and install the kp CLI for your operating system from the [Tanzu Build Service](https://network.tanzu.vmware.com/products/build-service/) page on Tanzu Network. For more information, see the [kp CLI help text](https://github.com/vmware-tanzu/kpack-cli/blob/v0.4.0/docs/kp.md) on GitHub.
 - [Set up developer namespaces to use installed packages](https://docs.vmware.com/en/Tanzu-Application-Platform/1.0/tap/GUID-install-components.html#setup).
 
-## <a id="add-buildpacks"></a>Add buildpackages to a ClusterStore
+## <a id="add-buildpacks"></a>Adding function buildpacks
 
-1. Add the functions buildpackages to the default ClusterStore. Run:
+To use the function `buildpacks`, you must upload their buildpackages to Build Service stores.
+
+1. Add the function's buildpackages to the default [ClusterStore](https://docs.vmware.com/en/Tanzu-Build-Service/1.4/vmware-tanzu-build-service-v14/GUID-managing-stores.html) by running:
 
     ```
     kp clusterstore add default \-b ghcr.io/vmware-tanzu/function-buildpacks-for-knative/python-buildpack-with-deps:0.0.11 \-b ghcr.io/vmware-tanzu/function-buildpacks-for-knative/java-buildpack-with-deps:0.0.6
     ```
 
-1. Create and save a new ClusterBuilder. Run:
+1. Create and save a new [ClusterBuilder](https://docs.vmware.com/en/Tanzu-Build-Service/1.4/vmware-tanzu-build-service-v14/GUID-managing-builders.html) by running:
 
     ```
-    kp clusterbuilder save function --store default -o - \&lt;\&lt;EOF
+    kp clusterbuilder save function --store default -o - <<EOF
     ---
     - group:
     - id: tanzu-buildpacks/python-lite
@@ -37,10 +39,10 @@ Before using functions workloads on Tanzu Application Platform, complete the fol
     - id: kn-fn/java-function
     ```
 
-1. (Optional) To use default Java and Python buildpacks for non-functions workloads, add an optional flag and set it to true to a cluster builder group to use those buildpacks.
+1. (Optional) To use default Java and Python buildpacks for non-functions workloads, add an optional flag and set it to `true` to a cluster builder group to use those buildpacks.
 
     ```
-    kp clusterbuilder save function --store default -o - \&lt;\&lt;EOF
+    kp clusterbuilder save function --store default -o - <<EOF
     ---
     - group:
     - id: tanzu-buildpacks/python-lite
@@ -54,7 +56,7 @@ Before using functions workloads on Tanzu Application Platform, complete the fol
 1. After creating the ClusterBuilder, update your tap\_values.yaml configuration to use the cluster builder you created:
 
     ```
-    ootb\_supply\_chain\_basic:
+    ootb_supply_chain_basic:
      cluster\_builder: function 
      registry:
        server: "index.docker.io"
@@ -69,7 +71,7 @@ Before using functions workloads on Tanzu Application Platform, complete the fol
 
 Where:
 
-- VERSION is the version of Tanzu Application Platform GUI you have installed. For example, 1.0.2.
+- `VERSION` is the version of Tanzu Application Platform GUI you have installed. For example, 1.0.2.
 
 ## <a id="add-accelerators"></a>Add accelerators to Tanzu Application Platform GUI
 
@@ -125,7 +127,7 @@ The accelerator ZIP file contains a file called k8s-resource.yaml. This file con
 
     Where:
 
-    - --source-image is a writable repository in your registry.
+    - `--source-image` is a writable repository in your registry.
 
     Harbor has the form: "my-harbor.io/my-project/functions-accelerator-python".
 
@@ -136,7 +138,7 @@ The accelerator ZIP file contains a file called k8s-resource.yaml. This file con
 1. View the build and runtime logs for your application by running the tail command:
 
     ```
-    tanzu apps workload tail tanzu-java-web-app --since 10m --timestamp
+    tanzu apps workload tail functions-accelerator-python --since 10m --timestamp
     ```
 
 1. After the workload is built and running, you can view the web application in your browser. To view the URL of the web application, run the following command and then ctrl-click the Workload Knative Services URL at the bottom of the command output.

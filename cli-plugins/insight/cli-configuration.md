@@ -1,8 +1,8 @@
-# CLI plug-in configuration
+# Configure the Tanzu Insight CLI plug-in
 
-This topic explains how to configure the Tanzu Insight plug-in:
+This topic explains how to configure the Tanzu Insight plug-in.
 
-> **Note:** All [required setup](../scst-store/overview.md#required-set-up) must be completed in addition to configuring the CLI
+> **Note:** All [required setup](cli-overview.md) must be completed in addition to configuring the CLI
 
 
 ## <a id='set-tar-cert'></a>Set the target and certificate authority certificate

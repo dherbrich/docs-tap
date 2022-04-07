@@ -122,7 +122,7 @@ The following packages are part of the Tanzu Application Platform:
 
   Default roles only apply to a user interacting with the cluster using kubectl and Tanzu CLI. Tanzu Application Platform GUI support for default roles is planned for a future release.
 
-- **[Developer Conventions](../convention-service/about.md)**
+- **[Developer Conventions](convention-service/about.md)**
 
   Developer conventions configure workloads to prepare them for inner loop development.
 
@@ -167,7 +167,15 @@ The following packages are part of the Tanzu Application Platform:
   This is an established industry best practice for reducing security risk and ensuring more
   efficient remediation.
 
-- **Supply Chain Security tools for Tanzu - Store**
+- **[Supply Chain Security Tools - Sign](scst-sign/overview.md)**
+
+  Supply Chain Security Tools - Sign provides an admission controller that allows a cluster operator
+  to specify a policy that allows or denies images from running based on signature verification
+  against public keys. It works with
+  [cosign signature format](https://github.com/sigstore/cosign#quick-start) and allows for fine-tuned
+  configuration based on image source patterns.
+
+- **[Supply Chain Security Tools - Store](scst-store/overview.md)**
 
   Supply Chain Security Tools - Store saves software bills of materials (SBoMs) to a database and
   enables you to query for image, source, package, and vulnerability relationships.
@@ -237,7 +245,7 @@ The following profiles are available in Tanzu Application Platform:
   This profile is intended for the transformation of workload revisions to running Pods. Specifically, hosting Deliveries and Deliverables.
 
 - **View:**
-  This profile is intended for instances of applications related to centralized developer experiences. Specifically, the Tanzu Application Platform GUI and Metadata Store.
+  This profile is intended for instances of applications related to centralized developer experiences. Specifically, Tanzu Application Platform GUI and Metadata Store.
 
 
 ## <a id='about-package-profiles'></a> About Tanzu Application Platform package profiles
