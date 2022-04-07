@@ -26,3 +26,7 @@ The default roles are installed with every Tanzu Application Platform profile. F
 ## <a id="work-with-roles"></a>Working with roles using the `rbac` CLI plug-in
 
 For more information about working with roles, see [Bind a user or group to a default role](binding.md).
+
+## Disclaimer
+
+[Tanzu Application Platform GUI](../tap-gui/about.md) is not making use of the described roles, instead it provides the user with view access for each cluster.
