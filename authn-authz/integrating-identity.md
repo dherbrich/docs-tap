@@ -2,7 +2,7 @@
 
 There are multiple ways to set up authentication for your Tanzu Application Platform deployment. You can choose to manage authentication at the infrastructure level with your kubernetes provider, for example TKG, EKS, AKS or GKE. 
 
-When you have multiple identity management solutions to integrate, for example, if you’re operating Tanzu Application Platform on multi-cloud, VMware recommends installing pinniped.  See our [guide to install pinniped](pinniped-install-guide.md). 
+When you have multiple identity management solutions to integrate, for example, if you’re operating Tanzu Application Platform on multi-cloud, VMware recommends installing pinniped.  See our [guide to install pinniped](pinniped-install-guide.md). See our Documentation for [Logging in using Pinniped](pinniped-login.md) after setting it up.
 
 ## Tanzu Kubernetes Grid
 
